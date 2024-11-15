@@ -1,9 +1,8 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 
-router.get('/me', async (req, res) => {
-  // Implementation coming soon
-  res.json({ message: 'User profile endpoint' });
+router.get("/me", async (req, res) => {
+  res.json({ message: "User profile endpoint" });
 });
 
-module.exports = router;
+module.exports = router; // Export just the router

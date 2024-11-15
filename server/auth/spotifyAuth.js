@@ -9,31 +9,41 @@ const spotifyApi = new SpotifyWebApi({
   redirectUri: process.env.SPOTIFY_REDIRECT_URI,
 });
 
-router.get("/spotify", (req, res) => {
+// Login route
+router.get("/login", (req, res) => {
   const scopes = ["user-read-recently-played", "playlist-modify-public", "playlist-modify-private"];
   const authorizeURL = spotifyApi.createAuthorizeURL(scopes);
   res.redirect(authorizeURL);
 });
 
+// Callback route after Spotify auth
 router.get("/callback", async (req, res) => {
   const { code } = req.query;
+
   try {
     const data = await spotifyApi.authorizationCodeGrant(code);
     const { access_token, refresh_token } = data.body;
 
-    spotifyApi.setAccessToken(access_token);
-    const profile = await spotifyApi.getMe();
-
-    // Store in session
-    req.session.userId = profile.body.id;
+    // Store tokens in session
     req.session.accessToken = access_token;
     req.session.refreshToken = refresh_token;
+
+    // Get user profile
+    spotifyApi.setAccessToken(access_token);
+    const me = await spotifyApi.getMe();
+    req.session.userId = me.body.id;
 
     res.redirect("/dashboard");
   } catch (error) {
     console.error("Auth Error:", error);
-    res.redirect("/error");
+    res.redirect("/auth/login");
   }
 });
 
-module.exports = { router, spotifyApi };
+// Logout route
+router.get("/logout", (req, res) => {
+  req.session.destroy();
+  res.redirect("/");
+});
+
+module.exports = router;

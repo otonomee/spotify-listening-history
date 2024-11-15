@@ -1,7 +1,8 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 
-router.get('/recent', async (req, res) => {
-  // Implementation coming soon
-  res.json({ message: 'Recent history endpoint' });
+router.get("/recent", async (req, res) => {
+  res.json({ message: "Recent history endpoint" });
 });
+
+module.exports = router;

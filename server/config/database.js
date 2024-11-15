@@ -1,14 +1,12 @@
 // server/config/database.js
 const { MongoClient, ServerApiVersion } = require("mongodb");
-require("dotenv").config();
 
-const uri = process.env.MONGODB_URI;
-if (!uri) {
-  console.error("MongoDB URI is not defined in the environment variables.");
-  process.exit(1);
+if (!process.env.MONGODB_URI) {
+  console.error("Available environment variables:", Object.keys(process.env));
+  throw new Error("MONGODB_URI environment variable is not set");
 }
 
-const client = new MongoClient(uri, {
+const client = new MongoClient(process.env.MONGODB_URI, {
   serverApi: {
     version: ServerApiVersion.v1,
     strict: true,
@@ -24,7 +22,7 @@ const connectDB = async () => {
     return client;
   } catch (error) {
     console.error("MongoDB connection error:", error);
-    process.exit(1);
+    throw error;
   }
 };
 

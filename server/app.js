@@ -1,42 +1,44 @@
-// server/app.js
+require("dotenv").config();
 const express = require("express");
 const session = require("express-session");
-const { connectDB } = require("./config/database");
-const authRouter = require("./auth/spotifyAuth");
-const historyRouter = require("./routes/api/history");
-const playlistsRouter = require("./routes/api/playlists");
-const userRouter = require("./routes/api/user");
-require("dotenv").config();
+const { connectDB, client } = require("./config/database");
+const authRoutes = require("./auth/spotifyAuth");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Connect to MongoDB
-connectDB().catch(console.dir);
+// MongoDB connection
+connectDB()
+  .then(() => console.log("Connected to MongoDB"))
+  .catch((error) => {
+    console.error("Failed to connect to MongoDB:", error);
+    process.exit(1);
+  });
 
 // Middleware
 app.use(express.json());
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || "spotify-history-secret-key-1234",
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
       secure: process.env.NODE_ENV === "production",
-      maxAge: 24 * 60 * 60 * 1000,
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
     },
   })
 );
 
-// Routes
-app.use("/auth", authRouter);
-app.use("/api/history", historyRouter);
-app.use("/api/playlists", playlistsRouter);
-app.use("/api/user", userRouter);
-
+// Landing page
 app.get("/", (req, res) => {
-  res.send("Spotify Listening History API");
+  res.send(`
+    <h1>Spotify Listening History</h1>
+    <a href="/auth/login">Login with Spotify</a>
+  `);
 });
+
+// Routes
+app.use("/auth", authRoutes);
 
 // Error handling
 app.use((err, req, res, next) => {
@@ -45,5 +47,5 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });
