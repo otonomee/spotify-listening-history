@@ -1,21 +1,23 @@
 {
   "name": "spotify-listening-history",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "Track Spotify listening history and create monthly playlists",
+  "main": "server/app.js",
   "scripts": {
-    "start": "node app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server/app.js",
+    "dev": "nodemon server/app.js",
+    "test": "jest"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2",
-    "mongodb": "^6.7.0",
-    "mongoose": "^8.4.1",
-    "node-cron": "^3.0.3",
-    "spotify-web-api-node": "^5.0.2"
+    "express": "^4.17.1",
+    "express-session": "^1.17.2",
+    "mongoose": "^6.0.12",
+    "spotify-web-api-node": "^5.0.2",
+    "node-cron": "^3.0.0",
+    "dotenv": "^10.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15",
+    "jest": "^27.3.1"
   }
 }
