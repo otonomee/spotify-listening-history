@@ -1,29 +1,31 @@
-// server/routes/api/history.js
+// server/routes/history.js
 const express = require("express");
 const router = express.Router();
 const { requireAuth } = require("../middleware/auth");
+const { archiveRecentTracks } = require("../services/trackArchiver");
+const ListeningHistory = require("../models/ListeningHistory");
 
-// Get recent listening history
-router.get("/recent", requireAuth, async (req, res) => {
+// Get history
+router.get("/", requireAuth, async (req, res) => {
   try {
-    const data = await req.spotifyApi.getMyRecentlyPlayedTracks({
-      limit: 50,
-    });
+    const { limit = 20, offset = 0 } = req.query;
+    const tracks = await ListeningHistory.find({ userId: req.session.userId }).sort({ playedAt: -1 }).skip(parseInt(offset)).limit(parseInt(limit));
 
-    // Format the response
-    const history = data.body.items.map((item) => ({
-      trackId: item.track.id,
-      trackName: item.track.name,
-      artistName: item.track.artists[0].name,
-      albumName: item.track.album.name,
-      playedAt: item.played_at,
-      albumCover: item.track.album.images[0]?.url,
-    }));
-
-    res.json(history);
+    res.json(tracks);
   } catch (error) {
     console.error("Error fetching history:", error);
     res.status(500).json({ error: "Failed to fetch history" });
+  }
+});
+
+// Force sync
+router.post("/sync", requireAuth, async (req, res) => {
+  try {
+    const result = await archiveRecentTracks(req.spotifyApi, req.session.userId);
+    res.json(result);
+  } catch (error) {
+    console.error("Error syncing tracks:", error);
+    res.status(500).json({ error: "Failed to sync tracks" });
   }
 });
 
