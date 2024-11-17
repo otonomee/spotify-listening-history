@@ -9,14 +9,14 @@ const spotifyApi = new SpotifyWebApi({
   redirectUri: process.env.SPOTIFY_REDIRECT_URI,
 });
 
-// Login route
+// Add the slashes back
 router.get("/login", (req, res) => {
   const scopes = ["user-read-recently-played", "playlist-modify-public", "playlist-modify-private"];
+  console.log("Redirect URI:", process.env.SPOTIFY_REDIRECT_URI); // Add this line
   const authorizeURL = spotifyApi.createAuthorizeURL(scopes);
   res.redirect(authorizeURL);
 });
 
-// Callback route after Spotify auth
 router.get("/callback", async (req, res) => {
   const { code } = req.query;
 
@@ -40,7 +40,6 @@ router.get("/callback", async (req, res) => {
   }
 });
 
-// Logout route
 router.get("/logout", (req, res) => {
   req.session.destroy();
   res.redirect("/");

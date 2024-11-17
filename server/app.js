@@ -1,13 +1,19 @@
 require("dotenv").config();
 const express = require("express");
 const session = require("express-session");
+const SpotifyWebApi = require("spotify-web-api-node");
 const { connectDB, client } = require("./config/database");
-const authRoutes = require("./auth/spotifyAuth");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// MongoDB connection
+// Debug middleware
+app.use((req, res, next) => {
+  console.log("Request:", req.method, req.url);
+  next();
+});
+
+// Connect to MongoDB
 connectDB()
   .then(() => console.log("Connected to MongoDB"))
   .catch((error) => {
@@ -19,15 +25,20 @@ connectDB()
 app.use(express.json());
 app.use(
   session({
-    secret: process.env.SESSION_SECRET,
+    secret: process.env.SESSION_SECRET || "spotify-history-secret-key-1234",
     resave: false,
     saveUninitialized: false,
     cookie: {
       secure: process.env.NODE_ENV === "production",
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      maxAge: 24 * 60 * 60 * 1000,
     },
   })
 );
+
+// Routes
+app.use("/auth", require("./auth/spotifyAuth"));
+app.use("/api/history", require("./routes/api/history"));
+app.use("/api/playlists", require("./routes/api/playlists"));
 
 // Landing page
 app.get("/", (req, res) => {
@@ -37,13 +48,10 @@ app.get("/", (req, res) => {
   `);
 });
 
-// Routes
-app.use("/auth", authRoutes);
-
 // Error handling
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: "Something broke!" });
+  console.error("Error:", err);
+  res.status(500).json({ error: "Internal Server Error" });
 });
 
 app.listen(PORT, () => {
