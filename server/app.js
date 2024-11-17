@@ -37,8 +37,9 @@ app.use(
 
 // Routes
 app.use("/auth", require("./auth/spotifyAuth"));
-app.use("/api/history", require("./routes/api/history"));
-app.use("/api/playlists", require("./routes/api/playlists"));
+app.use("/api/history", require("./routes/history"));
+app.use("/api/playlists", require("./routes/playlists"));
+app.use("/dashboard", require("./routes/dashboard"));
 
 // Landing page
 app.get("/", (req, res) => {

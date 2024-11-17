@@ -3,17 +3,22 @@ const express = require("express");
 const router = express.Router();
 const SpotifyWebApi = require("spotify-web-api-node");
 
+console.log("Configuring Spotify API with:", {
+  clientId: process.env.SPOTIFY_CLIENT_ID,
+  redirectUri: process.env.SPOTIFY_REDIRECT_URI,
+});
+
 const spotifyApi = new SpotifyWebApi({
   clientId: process.env.SPOTIFY_CLIENT_ID,
   clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
   redirectUri: process.env.SPOTIFY_REDIRECT_URI,
 });
 
-// Add the slashes back
 router.get("/login", (req, res) => {
   const scopes = ["user-read-recently-played", "playlist-modify-public", "playlist-modify-private"];
-  console.log("Redirect URI:", process.env.SPOTIFY_REDIRECT_URI); // Add this line
+  console.log("Starting login with redirect URI:", process.env.SPOTIFY_REDIRECT_URI);
   const authorizeURL = spotifyApi.createAuthorizeURL(scopes);
+  console.log("Generated authorize URL:", authorizeURL);
   res.redirect(authorizeURL);
 });
 

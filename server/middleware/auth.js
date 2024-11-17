@@ -1,15 +1,15 @@
 // server/middleware/auth.js
-const SpotifyWebApi = require('spotify-web-api-node');
+const SpotifyWebApi = require("spotify-web-api-node");
 
 const requireAuth = async (req, res, next) => {
   if (!req.session.accessToken) {
-    return res.status(401).json({ error: 'Unauthorized' });
+    return res.redirect("/auth/login"); // Changed to redirect instead of JSON response
   }
 
   const spotifyApi = new SpotifyWebApi({
     clientId: process.env.SPOTIFY_CLIENT_ID,
     clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
-    redirectUri: process.env.SPOTIFY_REDIRECT_URI
+    redirectUri: process.env.SPOTIFY_REDIRECT_URI,
   });
 
   spotifyApi.setAccessToken(req.session.accessToken);
@@ -29,10 +29,12 @@ const requireAuth = async (req, res, next) => {
         req.spotifyApi = spotifyApi;
         next();
       } catch (refreshError) {
-        res.status(401).json({ error: 'Session expired' });
+        // Also redirect on refresh token failure
+        return res.redirect("/auth/login");
       }
     } else {
-      res.status(500).json({ error: 'Authentication error' });
+      console.error("Auth error:", error);
+      return res.redirect("/auth/login");
     }
   }
 };
