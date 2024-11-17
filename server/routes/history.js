@@ -3,7 +3,7 @@ const express = require("express");
 const router = express.Router();
 const { requireAuth } = require("../middleware/auth");
 const { archiveRecentTracks } = require("../services/trackArchiver");
-const ListeningHistory = require("../models/ListeningHistory");
+const ListeningHistory = require("../models/ListeningHistory"); // one level up from routes
 
 // Get history
 router.get("/", requireAuth, async (req, res) => {

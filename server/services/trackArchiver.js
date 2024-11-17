@@ -1,6 +1,5 @@
 // server/services/trackArchiver.js
 const ListeningHistory = require("../models/ListeningHistory");
-
 async function getRecentTracks(spotifyApi, options = {}) {
   const {
     limit = 50, // Maximum allowed by API

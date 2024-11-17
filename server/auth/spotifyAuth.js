@@ -1,4 +1,3 @@
-// server/auth/spotifyAuth.js
 const express = require("express");
 const router = express.Router();
 const SpotifyWebApi = require("spotify-web-api-node");
@@ -27,16 +26,20 @@ router.get("/callback", async (req, res) => {
 
   try {
     const data = await spotifyApi.authorizationCodeGrant(code);
-    const { access_token, refresh_token } = data.body;
+    const { access_token, refresh_token, expires_in } = data.body;
 
     // Store tokens in session
     req.session.accessToken = access_token;
     req.session.refreshToken = refresh_token;
+    req.session.expiresIn = expires_in;
+    req.session.tokenTimestamp = Date.now();
 
     // Get user profile
     spotifyApi.setAccessToken(access_token);
     const me = await spotifyApi.getMe();
     req.session.userId = me.body.id;
+
+    console.log("User authenticated:", me.body);
 
     res.redirect("/dashboard");
   } catch (error) {
@@ -46,8 +49,12 @@ router.get("/callback", async (req, res) => {
 });
 
 router.get("/logout", (req, res) => {
-  req.session.destroy();
-  res.redirect("/");
+  req.session.destroy((err) => {
+    if (err) {
+      console.error("Error destroying session:", err);
+    }
+    res.redirect("/");
+  });
 });
 
 module.exports = router;

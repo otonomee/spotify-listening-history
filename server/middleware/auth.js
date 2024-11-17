@@ -1,9 +1,8 @@
-// server/middleware/auth.js
 const SpotifyWebApi = require("spotify-web-api-node");
 
 const requireAuth = async (req, res, next) => {
   if (!req.session.accessToken) {
-    return res.redirect("/auth/login"); // Changed to redirect instead of JSON response
+    return res.redirect("/auth/login");
   }
 
   const spotifyApi = new SpotifyWebApi({
@@ -16,11 +15,13 @@ const requireAuth = async (req, res, next) => {
   spotifyApi.setRefreshToken(req.session.refreshToken);
 
   try {
+    // Verify the access token by making a simple request
     await spotifyApi.getMe();
     req.spotifyApi = spotifyApi;
     next();
   } catch (error) {
     if (error.statusCode === 401) {
+      // Access token has expired, try to refresh it
       try {
         const data = await spotifyApi.refreshAccessToken();
         const { access_token } = data.body;
@@ -29,7 +30,7 @@ const requireAuth = async (req, res, next) => {
         req.spotifyApi = spotifyApi;
         next();
       } catch (refreshError) {
-        // Also redirect on refresh token failure
+        console.error("Error refreshing access token:", refreshError);
         return res.redirect("/auth/login");
       }
     } else {

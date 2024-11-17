@@ -35,10 +35,10 @@ app.use(
   })
 );
 
-// Routes
+// Routes - updated to match your directory structure
 app.use("/auth", require("./auth/spotifyAuth"));
-app.use("/api/history", require("./routes/history"));
-app.use("/api/playlists", require("./routes/playlists"));
+app.use("/history", require("./routes/history")); // removed /api
+app.use("/playlists", require("./routes/playlists")); // removed /api
 app.use("/dashboard", require("./routes/dashboard"));
 
 // Landing page
