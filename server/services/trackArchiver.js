@@ -1,130 +1,152 @@
 // server/services/trackArchiver.js
+const cron = require("node-cron");
 const ListeningHistory = require("../models/ListeningHistory");
-async function getRecentTracks(spotifyApi, options = {}) {
-  const {
-    limit = 50, // Maximum allowed by API
-    after, // Unix timestamp in ms
-    before, // Unix timestamp in ms
-  } = options;
+const SpotifyWebApi = require("spotify-web-api-node");
 
-  try {
-    const params = {
-      limit: Math.min(50, Math.max(1, limit)), // Ensure limit is between 1-50
-    };
-
-    // Can't use both after and before according to docs
-    if (after) {
-      params.after = after;
-    } else if (before) {
-      params.before = before;
-    }
-
-    const response = await spotifyApi.getMyRecentlyPlayedTracks(params);
-    return response.body;
-  } catch (error) {
-    console.error("Error fetching recent tracks:", error);
-    throw error;
-  }
-}
-
+// Function to archive recently played tracks
 async function archiveRecentTracks(spotifyApi, userId) {
   try {
-    // Get the latest track timestamp from our database
-    const lastTrack = await ListeningHistory.findOne({ userId }).sort({ playedAt: -1 }).exec();
+    // Get latest stored track timestamp
+    const lastTrack = await ListeningHistory.findOne({ userId }).sort({ playedAt: -1 });
 
     const after = lastTrack ? new Date(lastTrack.playedAt).getTime() : undefined;
 
-    const recentTracks = await getRecentTracks(spotifyApi, { after });
+    // Get recent tracks from Spotify
+    const recentTracks = await spotifyApi.getMyRecentlyPlayedTracks({
+      limit: 50,
+      after,
+    });
 
-    // Format and save new tracks
-    const tracks = recentTracks.items.map((item) => ({
+    // Format tracks for database
+    const tracks = recentTracks.body.items.map((item) => ({
       userId,
       trackId: item.track.id,
       trackName: item.track.name,
       artistName: item.track.artists[0].name,
       albumName: item.track.album.name,
-      albumImage: item.track.album.images[0]?.url,
       playedAt: new Date(item.played_at),
-      duration: item.track.duration_ms,
-      context: item.context
-        ? {
-            type: item.context.type,
-            uri: item.context.uri,
-            url: item.context.external_urls?.spotify,
-          }
-        : null,
-      trackUri: item.track.uri,
-      isLocal: item.track.is_local,
+      uri: item.track.uri,
       addedToMonthlyPlaylist: false,
       addedToMasterPlaylist: false,
     }));
 
-    // Save tracks while avoiding duplicates
-    const savedTracks = await Promise.all(
-      tracks.map((track) =>
-        ListeningHistory.findOneAndUpdate(
-          {
-            userId: track.userId,
-            trackId: track.trackId,
-            playedAt: track.playedAt,
-          },
-          track,
-          {
-            upsert: true,
-            new: true,
-          }
-        )
-      )
-    );
+    // Save to database
+    if (tracks.length > 0) {
+      await ListeningHistory.insertMany(tracks);
+      console.log(`Archived ${tracks.length} new tracks for user ${userId}`);
+    }
 
-    console.log(`Archived ${savedTracks.length} new tracks for user ${userId}`);
-
-    // Return cursors for pagination
-    return {
-      tracks: savedTracks,
-      cursors: recentTracks.cursors,
-      total: recentTracks.total,
-      next: recentTracks.next,
-    };
+    return tracks;
   } catch (error) {
     console.error("Error archiving tracks:", error);
     throw error;
   }
 }
 
-// For paginated history retrieval
-async function getArchivedTracks(userId, options = {}) {
-  const { limit = 20, offset = 0, startDate, endDate } = options;
-
-  const query = { userId };
-
-  if (startDate || endDate) {
-    query.playedAt = {};
-    if (startDate) query.playedAt.$gte = new Date(startDate);
-    if (endDate) query.playedAt.$lte = new Date(endDate);
-  }
-
+// Function to create/update master playlist
+async function updateMasterPlaylist(spotifyApi, userId, tracks) {
   try {
-    const [tracks, total] = await Promise.all([
-      ListeningHistory.find(query).sort({ playedAt: -1 }).skip(offset).limit(limit).exec(),
-      ListeningHistory.countDocuments(query),
-    ]);
+    // Find or create master playlist
+    const playlists = await spotifyApi.getUserPlaylists();
+    let masterPlaylist = playlists.body.items.find((p) => p.name === "Complete Listening History");
 
-    return {
-      tracks,
-      total,
-      offset,
-      limit,
-      next: offset + tracks.length < total ? offset + limit : null,
-    };
+    if (!masterPlaylist) {
+      const created = await spotifyApi.createPlaylist("Complete Listening History", {
+        description: "Archive of all tracks from your listening history",
+      });
+      masterPlaylist = created.body;
+    }
+
+    // Add new tracks in batches of 100
+    const trackUris = tracks.map((track) => track.uri);
+    for (let i = 0; i < trackUris.length; i += 100) {
+      const batch = trackUris.slice(i, i + 100);
+      await spotifyApi.addTracksToPlaylist(masterPlaylist.id, batch);
+    }
+
+    // Mark tracks as added to master playlist
+    await ListeningHistory.updateMany(
+      {
+        userId,
+        trackId: { $in: tracks.map((t) => t.trackId) },
+      },
+      { addedToMasterPlaylist: true }
+    );
+
+    return masterPlaylist.id;
   } catch (error) {
-    console.error("Error retrieving archived tracks:", error);
+    console.error("Error updating master playlist:", error);
     throw error;
   }
 }
 
+// Function to create monthly playlist
+async function createMonthlyPlaylist(spotifyApi, userId) {
+  try {
+    // Get last month's date range
+    const now = new Date();
+    const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMonth = new Date(firstOfMonth);
+    lastMonth.setMonth(lastMonth.getMonth() - 1);
+
+    // Get tracks from last month that haven't been added to a monthly playlist
+    const monthlyTracks = await ListeningHistory.find({
+      userId,
+      playedAt: {
+        $gte: lastMonth,
+        $lt: firstOfMonth,
+      },
+      addedToMonthlyPlaylist: false,
+    });
+
+    if (monthlyTracks.length > 0) {
+      // Create new playlist
+      const playlistName = `Monthly Recap - ${lastMonth.toLocaleString("default", {
+        month: "long",
+        year: "numeric",
+      })}`;
+
+      const playlist = await spotifyApi.createPlaylist(playlistName, {
+        description: `Tracks listened to in ${lastMonth.toLocaleString("default", { month: "long", year: "numeric" })}`,
+      });
+
+      // Add tracks in batches
+      const trackUris = monthlyTracks.map((track) => track.uri);
+      for (let i = 0; i < trackUris.length; i += 100) {
+        const batch = trackUris.slice(i, i + 100);
+        await spotifyApi.addTracksToPlaylist(playlist.id, batch);
+      }
+
+      // Mark tracks as added to monthly playlist
+      await ListeningHistory.updateMany({ _id: { $in: monthlyTracks.map((t) => t._id) } }, { addedToMonthlyPlaylist: true });
+
+      return playlist.id;
+    }
+  } catch (error) {
+    console.error("Error creating monthly playlist:", error);
+    throw error;
+  }
+}
+
+// Initialize scheduled jobs
+function initializeScheduledJobs() {
+  // Archive tracks every 15 minutes
+  cron.schedule("*/15 * * * *", async () => {
+    console.log("Running track archival job...");
+    // Get all users and archive their tracks
+    // Note: You'll need to implement user storage and token refresh
+  });
+
+  // Create monthly playlist at midnight on first of month
+  cron.schedule("0 0 1 * *", async () => {
+    console.log("Creating monthly playlist...");
+    // Get all users and create their monthly playlists
+  });
+}
+
 module.exports = {
-  archiveRecentTracks,
-  getRecentTracks,
-  getArchivedTracks,
+  archiveRecentTracks, // For immediate archiving
+  updateMasterPlaylist, // For updating master playlist
+  createMonthlyPlaylist, // For creating monthly playlists
+  initializeScheduledJobs, // For starting scheduled jobs
 };
