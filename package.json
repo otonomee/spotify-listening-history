@@ -9,11 +9,12 @@
     "test": "jest"
   },
   "dependencies": {
+    "axios": "^1.7.8",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "express-session": "^1.17.2",
     "mongoose": "^6.0.12",
-    "node-cron": "^3.0.0",
+    "node-cron": "^3.0.3",
     "spotify-web-api-node": "^5.0.2"
   },
   "devDependencies": {

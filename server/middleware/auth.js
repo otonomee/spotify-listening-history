@@ -1,42 +1,35 @@
+// server/middleware/auth.js
 const SpotifyWebApi = require("spotify-web-api-node");
+const User = require("../models/User");
 
 const requireAuth = async (req, res, next) => {
-  if (!req.session.accessToken) {
+  if (!req.session.userId) {
     return res.redirect("/auth/login");
   }
 
-  const spotifyApi = new SpotifyWebApi({
-    clientId: process.env.SPOTIFY_CLIENT_ID,
-    clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
-    redirectUri: process.env.SPOTIFY_REDIRECT_URI,
-  });
-
-  spotifyApi.setAccessToken(req.session.accessToken);
-  spotifyApi.setRefreshToken(req.session.refreshToken);
-
   try {
-    // Verify the access token by making a simple request
-    await spotifyApi.getMe();
+    // Get user from database
+    const user = await User.findOne({ spotifyId: req.session.userId });
+    if (!user) {
+      return res.redirect("/auth/login");
+    }
+
+    // Create Spotify API instance with user's tokens
+    const spotifyApi = new SpotifyWebApi({
+      clientId: process.env.SPOTIFY_CLIENT_ID,
+      clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
+      redirectUri: process.env.SPOTIFY_REDIRECT_URI,
+    });
+
+    spotifyApi.setAccessToken(user.accessToken);
+    spotifyApi.setRefreshToken(user.refreshToken);
+
+    // Attach to request for use in routes
     req.spotifyApi = spotifyApi;
     next();
   } catch (error) {
-    if (error.statusCode === 401) {
-      // Access token has expired, try to refresh it
-      try {
-        const data = await spotifyApi.refreshAccessToken();
-        const { access_token } = data.body;
-        req.session.accessToken = access_token;
-        spotifyApi.setAccessToken(access_token);
-        req.spotifyApi = spotifyApi;
-        next();
-      } catch (refreshError) {
-        console.error("Error refreshing access token:", refreshError);
-        return res.redirect("/auth/login");
-      }
-    } else {
-      console.error("Auth error:", error);
-      return res.redirect("/auth/login");
-    }
+    console.error("Auth middleware error:", error);
+    res.redirect("/auth/login");
   }
 };
 

@@ -31,10 +31,6 @@ const listeningHistorySchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  playedDuration: {
-    type: Number,
-    required: true,
-  },
 });
 
 // Index for efficient querying of user's listening history by date range
