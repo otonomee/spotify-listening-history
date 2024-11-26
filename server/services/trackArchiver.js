@@ -1,7 +1,8 @@
 // server/services/trackArchiver.js
 const cron = require("node-cron");
+const User = require("../models/User");
 const ListeningHistory = require("../models/ListeningHistory");
-const SpotifyWebApi = require("spotify-web-api-node");
+const { getValidSpotifyApi } = require("./tokenManager");
 
 // Function to archive recently played tracks
 async function archiveRecentTracks(spotifyApi, userId) {
@@ -132,21 +133,54 @@ async function createMonthlyPlaylist(spotifyApi, userId) {
 function initializeScheduledJobs() {
   // Archive tracks every 15 minutes
   cron.schedule("*/15 * * * *", async () => {
-    console.log("Running track archival job...");
-    // Get all users and archive their tracks
-    // Note: You'll need to implement user storage and token refresh
+    try {
+      const users = await User.find({});
+
+      for (const user of users) {
+        try {
+          // Get fresh API instance with valid token
+          const spotifyApi = await getValidSpotifyApi(user.spotifyId);
+
+          // Archive tracks
+          const tracks = await archiveRecentTracks(spotifyApi, user.spotifyId);
+
+          // Update master playlist
+          if (tracks.length > 0) {
+            await updateMasterPlaylist(spotifyApi, user.spotifyId, tracks);
+          }
+        } catch (userError) {
+          console.error(`Error processing user ${user.spotifyId}:`, userError);
+          // Continue with next user
+        }
+      }
+    } catch (error) {
+      console.error("Track archival job error:", error);
+    }
   });
 
-  // Create monthly playlist at midnight on first of month
+  // Monthly playlist creation remains similar
   cron.schedule("0 0 1 * *", async () => {
-    console.log("Creating monthly playlist...");
-    // Get all users and create their monthly playlists
+    try {
+      const users = await User.find({});
+
+      for (const user of users) {
+        try {
+          const spotifyApi = await getValidSpotifyApi(user.spotifyId);
+          await createMonthlyPlaylist(spotifyApi, user.spotifyId);
+        } catch (userError) {
+          console.error(`Error creating monthly playlist for ${user.spotifyId}:`, userError);
+          // Continue with next user
+        }
+      }
+    } catch (error) {
+      console.error("Monthly playlist job error:", error);
+    }
   });
 }
 
 module.exports = {
-  archiveRecentTracks, // For immediate archiving
-  updateMasterPlaylist, // For updating master playlist
-  createMonthlyPlaylist, // For creating monthly playlists
-  initializeScheduledJobs, // For starting scheduled jobs
+  archiveRecentTracks,
+  updateMasterPlaylist,
+  createMonthlyPlaylist,
+  initializeScheduledJobs,
 };
