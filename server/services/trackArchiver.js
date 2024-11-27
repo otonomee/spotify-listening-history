@@ -26,7 +26,6 @@ async function getOrCreateMasterPlaylist(spotifyApi) {
 
   return masterPlaylist;
 }
-
 // Run every 10 seconds for testing
 cron.schedule("*/10 * * * * *", async () => {
   try {
@@ -48,9 +47,10 @@ cron.schedule("*/10 * * * * *", async () => {
 
         let after = 0;
         if (lastStoredTrack && lastStoredTrack.playedAt) {
-          after = new Date(lastStoredTrack.playedAt).getTime();
+          // Convert milliseconds to seconds for Spotify API
+          after = Math.floor(new Date(lastStoredTrack.playedAt).getTime() / 1000);
         }
-        console.log(`Fetching tracks after: ${after} (${new Date(after).toISOString()})`);
+        console.log(`Fetching tracks after: ${after} (${new Date(after * 1000).toISOString()})`);
 
         // Get recent tracks after our last stored track
         const recentTracks = await spotifyApi.getMyRecentlyPlayedTracks({
@@ -73,6 +73,9 @@ cron.schedule("*/10 * * * * *", async () => {
             albumName: item.track.album.name,
             playedAt: new Date(item.played_at),
             uri: item.track.uri,
+            // Add these required fields:
+            duration: item.track.duration_ms,
+            timestamp: new Date(item.played_at), // Using played_at as timestamp
           }));
 
           // Save to database and add to playlist
@@ -90,8 +93,8 @@ cron.schedule("*/10 * * * * *", async () => {
 
               // Add to master playlist
               try {
-                await spotifyApi.addTracksToPlaylist(masterPlaylist.id, [track.uri]);
-                console.log(`Added track to playlist: ${track.trackName}`);
+                const addTrackResponse = await spotifyApi.addTracksToPlaylist(masterPlaylist.id, [track.uri]);
+                console.log(`Added track to playlist: ${track.trackName}`, addTrackResponse.body);
               } catch (addTrackError) {
                 console.error(`Error adding track to playlist: ${track.trackName}`, addTrackError);
               }
