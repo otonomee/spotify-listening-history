@@ -52,6 +52,25 @@ function log(...args) {
 const cronSchedule = "*/10 * * * * *";
 log(`Initializing with schedule: ${cronSchedule}`);
 
+// Add this function to refresh the access token
+async function refreshAccessToken(spotifyApi, user) {
+  try {
+    const data = await spotifyApi.refreshAccessToken();
+    const newAccessToken = data.body["access_token"];
+    const newRefreshToken = data.body["refresh_token"]; // Update if you receive a new refresh token
+
+    // Update the user's tokens in the database
+    await User.updateOne({ spotifyId: user.spotifyId }, { accessToken: newAccessToken, refreshToken: newRefreshToken });
+
+    spotifyApi.setAccessToken(newAccessToken);
+    spotifyApi.setRefreshToken(newRefreshToken);
+    log(`Refreshed access token for user: ${user.spotifyId}`);
+  } catch (error) {
+    log(`Failed to refresh access token for user ${user.spotifyId}:`, error.message);
+    throw error; // Rethrow to handle it in the main processing logic
+  }
+}
+
 const job = cron.schedule(cronSchedule, async () => {
   log("=== Starting New Track Check ===");
   try {
@@ -73,6 +92,11 @@ const job = cron.schedule(cronSchedule, async () => {
 
         spotifyApi.setAccessToken(user.accessToken);
         spotifyApi.setRefreshToken(user.refreshToken);
+
+        // Check if the access token is expired
+        if (spotifyApi.getAccessToken() === null) {
+          await refreshAccessToken(spotifyApi, user);
+        }
 
         // Get latest track we have in our database
         const lastStoredTrack = await ListeningHistory.findOne({ userId: user.spotifyId }, { trackName: 1, timestamp: 1 }).sort({ timestamp: -1 });
