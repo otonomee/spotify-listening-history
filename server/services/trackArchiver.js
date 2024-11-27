@@ -5,26 +5,43 @@ const ListeningHistory = require("../models/ListeningHistory");
 const SpotifyWebApi = require("spotify-web-api-node");
 
 async function getOrCreateMasterPlaylist(spotifyApi) {
-  const playlists = await spotifyApi.getUserPlaylists({ limit: 50 });
-  console.log(
-    "playlists",
-    playlists.body.items.map((p) => p.name)
-  );
+  const masterPlaylistName = "📼 Complete Listening History";
 
-  let masterPlaylist = playlists.body.items.find((p) => p.name === "Complete Listening History");
+  const playlists = await spotifyApi.getUserPlaylists({ limit: 50 });
+  let masterPlaylist = playlists.body.items.find((p) => p.name === masterPlaylistName);
 
   if (!masterPlaylist) {
-    console.log("Creating master playlist...");
-    const created = await spotifyApi.createPlaylist("Complete Listening History", {
-      description: "Archive of all tracks listened to",
+    log(`Creating master playlist: ${masterPlaylistName}`);
+    const created = await spotifyApi.createPlaylist(masterPlaylistName, {
+      description: `Time Capsule: Your complete listening archive. Every track you've ever played, automatically preserved in chronological order. Monthly breakdowns available in separate playlists.`,
       public: false,
     });
     masterPlaylist = created.body;
-  } else {
-    console.log("Found existing master playlist:", masterPlaylist.name);
   }
 
   return masterPlaylist;
+}
+
+async function getOrCreateMonthlyPlaylist(spotifyApi) {
+  const now = new Date();
+  const playlistName = `📼 ${now.toLocaleString("default", { month: "short" })} '${now.getFullYear().toString().slice(2)}`;
+
+  const playlists = await spotifyApi.getUserPlaylists({ limit: 50 });
+  let monthlyPlaylist = playlists.body.items.find((p) => p.name === playlistName);
+
+  if (!monthlyPlaylist) {
+    log(`Creating new monthly playlist: ${playlistName}`);
+    const created = await spotifyApi.createPlaylist(playlistName, {
+      description: `Time Capsule: Your listening history from ${now.toLocaleString("default", {
+        month: "long",
+        year: "numeric",
+      })}. Part of your complete listening archive - check out "📼 Complete Listening History" for your full musical timeline.`,
+      public: false,
+    });
+    monthlyPlaylist = created.body;
+  }
+
+  return monthlyPlaylist;
 }
 
 // Add a timestamp to logs
@@ -96,8 +113,8 @@ const job = cron.schedule(cronSchedule, async () => {
             played_at: recentTracks.body.items[recentTracks.body.items.length - 1].played_at,
           });
 
-          // Get master playlist
           const masterPlaylist = await getOrCreateMasterPlaylist(spotifyApi);
+          const monthlyPlaylist = await getOrCreateMonthlyPlaylist(spotifyApi);
 
           // Sort tracks by played_at to ensure we process oldest first
           const sortedTracks = recentTracks.body.items.sort((a, b) => new Date(a.played_at).getTime() - new Date(b.played_at).getTime());
@@ -129,13 +146,9 @@ const job = cron.schedule(cronSchedule, async () => {
                 await ListeningHistory.create(track);
                 savedCount++;
 
-                // Add to master playlist
-                try {
-                  await spotifyApi.addTracksToPlaylist(masterPlaylist.id, [track.uri]);
-                  log(`Added to playlist: ${track.trackName}`);
-                } catch (addTrackError) {
-                  log(`Error adding track to playlist: ${track.trackName}`, addTrackError.message);
-                }
+                // Add to both playlists
+                await spotifyApi.addTracksToPlaylist(masterPlaylist.id, [track.uri]);
+                await spotifyApi.addTracksToPlaylist(monthlyPlaylist.id, [track.uri]);
               } else {
                 log(`Skipping duplicate track: ${track.trackName} (played at: ${track.timestamp.toISOString()})`);
               }
@@ -165,6 +178,7 @@ log("Service initialized and started");
 
 module.exports = {
   getOrCreateMasterPlaylist,
+  getOrCreateMonthlyPlaylist,
   job,
   checkNewTracks: async () => {
     log("Manually triggering track check...");
