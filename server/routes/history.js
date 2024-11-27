@@ -2,7 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const { requireAuth } = require("../middleware/auth");
-const { archiveRecentTracks } = require("../services/trackArchiver");
+const { archiveRecentTracks, job } = require("../services/trackArchiver");
 const ListeningHistory = require("../models/ListeningHistory"); // one level up from routes
 
 // Get history
@@ -26,6 +26,18 @@ router.post("/sync", requireAuth, async (req, res) => {
   } catch (error) {
     console.error("Error syncing tracks:", error);
     res.status(500).json({ error: "Failed to sync tracks" });
+  }
+});
+
+// Endpoint to manually trigger track archiving
+router.post("/archive-tracks", async (req, res) => {
+  try {
+    // Manually trigger the job
+    await job.start(); // Start the job if it's not already running
+    res.status(200).json({ message: "Track archiving process started." });
+  } catch (error) {
+    console.error("Error starting track archiving:", error);
+    res.status(500).json({ message: "Failed to start track archiving." });
   }
 });
 

@@ -4,6 +4,8 @@ const session = require("express-session");
 const SpotifyWebApi = require("spotify-web-api-node");
 const { connectDB, client } = require("./config/database");
 const User = require("./models/User");
+const spotifyAuthRoutes = require("./auth/spotifyAuth");
+const trackArchiverRoutes = require("./routes/trackArchiver");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -43,6 +45,8 @@ app.use("/auth", require("./auth/spotifyAuth"));
 app.use("/history", require("./routes/history")); // removed /api
 app.use("/playlists", require("./routes/playlists")); // removed /api
 app.use("/dashboard", require("./routes/dashboard"));
+app.use("/auth", spotifyAuthRoutes);
+app.use("/tracks", trackArchiverRoutes);
 
 // Debug route to check users
 app.get("/api/debug/users", async (req, res) => {
@@ -78,3 +82,5 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
+module.exports = app;

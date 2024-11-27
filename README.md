@@ -1,6 +1,6 @@
-# Spotify Listening History Archiver
+# Spotify Time Capsule
 
-Automatically archives your Spotify listening history, creating a comprehensive playlist of every song you've played. It's like a personal time capsule, preserving a detailed record of the music you've enjoyed over time.
+Automatically archives your Spotify listening history, creating a comprehensive playlist of every song you've played. It's like a digital memory box for your musical journey, preserving a detailed record of your soundtrack through life.
 
 ## Why Use It?
 
@@ -13,14 +13,32 @@ Your Spotify history contains valuable personal data that can be useful for all 
 
 ## Key Features
 
-- Continuously monitors your Spotify account for new tracks
-- Saves detailed song info (title, artist, album, timestamp) to a database
-- Maintains a dedicated "Complete Listening History" playlist on your Spotify
+- 🎵 Real-time tracking of your Spotify listening activity
+- 📊 Detailed song metadata storage (title, artist, album, timestamp)
+- 📝 Automatic playlist generation of your complete listening history
+- 🔒 Secure and private data storage in your personal MongoDB database
 
 ## Getting Started
 
-Make sure you have Node.js and MongoDB installed.
-Clone the repo and run npm install to set things up.
-Add your Spotify API client ID and secret as environment variables.
+### Prerequisites
 
-The app uses the Spotify Web API to regularly check for new tracks you've played. It saves the details to a database and adds them to a special playlist on your account.
+- Node.js (v14 or higher)
+- MongoDB
+- Spotify Premium account
+
+### Installation
+
+1. Clone the repository
+   ```bash
+   git clone https://github.com/yourusername/spotify-time-capsule.git
+   ```
+2. Install dependencies
+   ```bash
+   npm install
+   ```
+3. Configure environment variables
+   ```env
+   SPOTIFY_CLIENT_ID=your_client_id
+   SPOTIFY_CLIENT_SECRET=your_client_secret
+   MONGODB_URI=your_mongodb_uri
+   ```

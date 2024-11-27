@@ -1,8 +1,15 @@
 // server/auth/spotifyAuth.js
 const express = require("express");
+const cors = require("cors");
 const router = express.Router();
 const SpotifyWebApi = require("spotify-web-api-node");
 const User = require("../models/User");
+
+router.use(
+  cors({
+    origin: "http://localhost:3001",
+  })
+);
 
 const spotifyApi = new SpotifyWebApi({
   clientId: process.env.SPOTIFY_CLIENT_ID,
