@@ -33,7 +33,7 @@ router.post("/sync", requireAuth, async (req, res) => {
 router.post("/archive-tracks", async (req, res) => {
   try {
     // Manually trigger the job
-    await job.start(); // Start the job if it's not already running
+    job.start(); // Start the job if it's not already running
     res.status(200).json({ message: "Track archiving process started." });
   } catch (error) {
     console.error("Error starting track archiving:", error);

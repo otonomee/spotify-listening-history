@@ -3,7 +3,7 @@ const router = express.Router();
 const { fetchAndArchiveTracks } = require("../services/trackArchiver");
 const User = require("../models/User"); // Import User model
 
-// Endpoint to manually trigger track archiving
+// Minimal endpoint to trigger archiving
 router.post("/archive-tracks", async (req, res) => {
   try {
     const userId = req.session.userId; // Assuming you store user ID in session

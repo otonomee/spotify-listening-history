@@ -195,6 +195,27 @@ const job = cron.schedule(cronSchedule, async () => {
 job.start();
 log("Service initialized and started");
 
+// Add this function to your existing trackArchiver.js
+async function fetchAndArchiveTracks(user) {
+  const spotifyApi = new SpotifyWebApi({
+    clientId: process.env.SPOTIFY_CLIENT_ID,
+    clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
+  });
+
+  spotifyApi.setAccessToken(user.accessToken);
+  spotifyApi.setRefreshToken(user.refreshToken);
+
+  // Get the last stored track timestamp
+  const lastStoredTrack = await ListeningHistory.findOne({ userId: user.spotifyId }, { trackName: 1, timestamp: 1 }).sort({ timestamp: -1 });
+  let after = 0;
+  if (lastStoredTrack && lastStoredTrack.timestamp) {
+    after = Math.floor(new Date(lastStoredTrack.timestamp).getTime() / 1000) + 1; // Add 1 second
+  }
+
+  // Call the existing fetchRecentTracks function
+  await fetchRecentTracks(spotifyApi, user, after);
+}
+
 module.exports = {
   getOrCreateMasterPlaylist,
   getOrCreateMonthlyPlaylist,
@@ -204,4 +225,5 @@ module.exports = {
     const users = await User.find({});
     // ... rest of the logic ...
   },
+  fetchAndArchiveTracks,
 };

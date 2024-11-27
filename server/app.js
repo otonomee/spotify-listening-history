@@ -6,6 +6,7 @@ const { connectDB, client } = require("./config/database");
 const User = require("./models/User");
 const spotifyAuthRoutes = require("./auth/spotifyAuth");
 const trackArchiverRoutes = require("./routes/trackArchiver");
+const cors = require("cors");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -27,6 +28,7 @@ connectDB()
   });
 
 // Middleware
+app.use(cors());
 app.use(express.json());
 app.use(
   session({
@@ -46,7 +48,7 @@ app.use("/history", require("./routes/history")); // removed /api
 app.use("/playlists", require("./routes/playlists")); // removed /api
 app.use("/dashboard", require("./routes/dashboard"));
 app.use("/auth", spotifyAuthRoutes);
-app.use("/tracks", trackArchiverRoutes);
+app.use("/archive-tracks", trackArchiverRoutes);
 
 // Debug route to check users
 app.get("/api/debug/users", async (req, res) => {

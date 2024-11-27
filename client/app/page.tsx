@@ -20,12 +20,12 @@ export default function Home() {
 
   const handleArchiveTracks = async () => {
     try {
-      const response = await fetch("/tracks/archive-tracks", {
+      const response = await fetch("/archive-tracks", {
         method: "POST",
       });
       if (response.ok) {
         const data = await response.json();
-        console.log(data.message); // Log success message
+        console.log("Track archiving process started:", data.message);
         setTracks(data.tracks); // Update the state with the fetched tracks
       } else {
         console.error("Failed to start track archiving.");
