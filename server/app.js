@@ -3,13 +3,16 @@ const express = require("express");
 const session = require("express-session");
 const SpotifyWebApi = require("spotify-web-api-node");
 const { connectDB, client } = require("./config/database");
+const User = require("./models/User");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Debug middleware
+// Debug middleware to log requests (excluding Next.js HMR)
 app.use((req, res, next) => {
-  console.log("Request:", req.method, req.url);
+  if (!req.path.includes("/_next")) {
+    console.log(`${req.method} ${req.path}`);
+  }
   next();
 });
 
@@ -40,6 +43,23 @@ app.use("/auth", require("./auth/spotifyAuth"));
 app.use("/history", require("./routes/history")); // removed /api
 app.use("/playlists", require("./routes/playlists")); // removed /api
 app.use("/dashboard", require("./routes/dashboard"));
+
+// Debug route to check users
+app.get("/api/debug/users", async (req, res) => {
+  try {
+    const users = await User.find({});
+    res.json({
+      userCount: users.length,
+      users: users.map((u) => ({
+        id: u.spotifyId,
+        name: u.displayName,
+        hasTokens: !!u.accessToken && !!u.refreshToken,
+      })),
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Landing page
 app.get("/", (req, res) => {
