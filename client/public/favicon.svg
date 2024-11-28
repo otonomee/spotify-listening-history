@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Base box/archive shape -->
+  <path 
+    d="M6 8h20c1.1 0 2 .9 2 2v16c0 1.1-.9 2-2 2H6c-1.1 0-2-.9-2-2V10c0-1.1.9-2 2-2z"
+    fill="#1DB954"
+  />
+  
+  <!-- Top lid -->
+  <path 
+    d="M28 8l-4-4H8L4 8"
+    fill="#1DB954"
+    stroke="#1DB954"
+    stroke-width="2"
+    stroke-linejoin="round"
+  />
+  
+  <!-- Sound waves -->
+  <path 
+    d="M16 12a7 7 0 0 1 7 7"
+    fill="none"
+    stroke="white"
+    stroke-width="2"
+    stroke-linecap="round"
+  />
+  <path 
+    d="M16 15a4 4 0 0 1 4 4"
+    fill="none"
+    stroke="white"
+    stroke-width="2"
+    stroke-linecap="round"
+  />
+  
+  <!-- Center dot -->
+  <circle 
+    cx="16"
+    cy="19"
+    r="1.5"
+    fill="white"
+  />
+</svg>
