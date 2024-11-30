@@ -1,4 +1,4 @@
-# Spotify Monthly Playlister
+# 🎵 Spotify Monthly Playlister
 Automatic playlist generation of complete listening history for a given month/year. Principally, I wanted to automate & make accessible to others the process that I'd (https://open.spotify.com/user/12163912742?si=02d1e4a6e9334fa6)[already been doing essentially for years.]
 
 ## Why Use It?
