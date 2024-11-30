@@ -59,7 +59,7 @@ export default function Page() {
                 <path d="M16 15a4 4 0 0 1 4 4" stroke="white" strokeWidth="2" strokeLinecap="round" />
                 <circle cx="16" cy="19" r="1.5" fill="white" />
               </svg>
-              <span className="text-xl font-bold text-zinc-900">Spotchive</span>
+              <span className="text-xl font-bold text-zinc-900">Spotify Monthly Playlister</span>
             </div>
 
             <div className="flex items-center gap-4">
@@ -81,7 +81,9 @@ export default function Page() {
       <main className="container mx-auto px-4 py-12">
         <div className="max-w-2xl mx-auto text-center mb-12">
           <h1 className="text-4xl font-bold mb-4 text-zinc-900">Your Monthly Music Archive</h1>
-          <p className="text-zinc-600 text-lg">Spotchive automatically creates a playlist for every month, saving all the songs you discover.</p>
+          <p className="text-zinc-600 text-lg">
+            Spotify Monthly Playlister automatically creates a playlist for every month, saving all the songs you discover.
+          </p>
         </div>
 
         <Card className="max-w-3xl mx-auto border border-zinc-200 shadow-lg">

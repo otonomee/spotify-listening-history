@@ -1,7 +1,9 @@
-# 🎵 Spotify Monthly Playlister
+# 🎵 Time Capsule For Spotify
+
 Automatic playlist generation of complete listening history for a given month/year. Principally, I wanted to automate & make accessible to others the process that I'd (https://open.spotify.com/user/12163912742?si=02d1e4a6e9334fa6)[already been doing essentially for years.]
 
 ## Why Use It?
+
 - Nostalgia: Look back on the tunes you were loving at different points in your life.
 - Discover Trends: Analyze your listening habits to uncover preferences and rediscover forgotten favorites.
 - Share with Others: Show friends and family the shitty taste in music you had during a given time

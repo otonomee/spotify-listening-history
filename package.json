@@ -1,5 +1,5 @@
 {
-  "name": "spotify-listening-history",
+  "name": "time-capsule-for-spotify",
   "version": "1.0.0",
   "description": "Track Spotify listening history and create monthly playlists",
   "main": "server/app.js",
@@ -19,7 +19,8 @@
     "next": "^15.0.3",
     "node-cron": "^3.0.3",
     "spotify-web-api-node": "^5.0.2",
-    "stripe": "^17.4.0"
+    "stripe": "^17.4.0",
+    "vercel": "^39.1.2"
   },
   "devDependencies": {
     "jest": "^27.3.1",

@@ -6,7 +6,7 @@ const router = express.Router();
 const SpotifyWebApi = require("spotify-web-api-node");
 const User = require("../models/User");
 
-const allowedOrigins = ["https://spotify-monthly-playlister.vercel.app/", "http://localhost:3001", "https://spotify-monthly-playlister.vercel.app"];
+const allowedOrigins = ["https://time-capsule-for-spotify.vercel.app/", "http://localhost:3001", "https://time-capsule-for-spotify.vercel.app"];
 
 router.use(
   cors({

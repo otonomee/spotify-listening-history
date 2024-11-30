@@ -1,4 +1,4 @@
-spotify-listening-history/
+time-capsule-for-spotify/
 ├── client/
 │ ├── src/
 │ │ ├── components/
