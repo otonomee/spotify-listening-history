@@ -21,7 +21,7 @@ export default function Page() {
   const [isLoading, setIsLoading] = useState(true);
 
   const handleSpotifyLogin = () => {
-    window.location.href = "https://spotify-monthly-playlister.vercel.app/auth/login";
+    window.location.href = "https://time-capsule-for-spotify.vercel.app/auth/login";
   };
 
   const handleDonate = () => {
@@ -53,13 +53,13 @@ export default function Page() {
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center space-x-3">
               <svg className="w-8 h-8" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-                <path d="M6 8h20c1.1 0 2 .9 2 2v16c0 1.1-.9 2-2 2H6c-1.1 0-2-.9-2-2V10c0-1.1.9-2 2-2z" fill="#1DB954" />
-                <path d="M28 8l-4-4H8L4 8" fill="#1DB954" stroke="#1DB954" strokeWidth="2" strokeLinejoin="round" />
-                <path d="M16 12a7 7 0 0 1 7 7" stroke="white" strokeWidth="2" strokeLinecap="round" />
-                <path d="M16 15a4 4 0 0 1 4 4" stroke="white" strokeWidth="2" strokeLinecap="round" />
-                <circle cx="16" cy="19" r="1.5" fill="white" />
+                <circle cx="16" cy="16" r="14" fill="#6366F1" />
+                <path d="M13 8v12c0 1.6-1.3 3-3 3s-3-1.3-3-3 1.3-3 3-3c.6 0 1.1.2 1.5.4V8H13z" fill="white" />
+                <circle cx="10" cy="20" r="1.5" fill="white" />
+                <path d="M25 12v8c0 1.6-1.3 3-3 3s-3-1.3-3-3 1.3-3 3-3c.6 0 1.1.2 1.5.4V12H25z" fill="white" />
+                <circle cx="22" cy="20" r="1.5" fill="white" />
               </svg>
-              <span className="text-xl font-bold text-zinc-900">Spotify Monthly Playlister</span>
+              <span className="text-xl font-bold text-zinc-900">Time Capsule For Spotify</span>
             </div>
 
             <div className="flex items-center gap-4">
@@ -82,7 +82,7 @@ export default function Page() {
         <div className="max-w-2xl mx-auto text-center mb-12">
           <h1 className="text-4xl font-bold mb-4 text-zinc-900">Your Monthly Music Archive</h1>
           <p className="text-zinc-600 text-lg">
-            Spotify Monthly Playlister automatically creates a playlist for every month, saving all the songs you discover.
+            Time Capsule For Spotify automatically creates a playlist for every month, saving all the songs you discover.
           </p>
         </div>
 
