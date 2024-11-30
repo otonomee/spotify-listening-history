@@ -25,7 +25,7 @@ export default function Page() {
   };
 
   const handleDonate = () => {
-    window.open("https://ko-fi.com/your-username", "_blank");
+    window.open("https://buy.stripe.com/dR60443uah0m7WUcMM", "_blank");
   };
 
   const fetchCurrentMonthTracks = async () => {
