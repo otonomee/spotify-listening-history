@@ -21,7 +21,7 @@ export default function Page() {
   const [isLoading, setIsLoading] = useState(true);
 
   const handleSpotifyLogin = () => {
-    window.location.href = "http://localhost:3000/auth/login";
+    window.location.href = "https://spotify-monthly-playlister.vercel.app/auth/login";
   };
 
   const handleDonate = () => {

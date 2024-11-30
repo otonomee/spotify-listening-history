@@ -1,16 +1,44 @@
 // server/auth/spotifyAuth.js
+// server/auth/spotifyAuth.js
 const express = require("express");
 const cors = require("cors");
 const router = express.Router();
 const SpotifyWebApi = require("spotify-web-api-node");
 const User = require("../models/User");
 
+const allowedOrigins = ["https://spotify-monthly-playlister.vercel.app/", "http://localhost:3001", "https://spotify-monthly-playlister.vercel.app"];
+
 router.use(
   cors({
-    origin: "http://localhost:3001",
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) === -1) {
+        const msg = "The CORS policy for this site does not allow access from the specified Origin.";
+        return callback(new Error(msg), false);
+      }
+      return callback(null, true);
+    },
     credentials: true,
   })
 );
+
+router.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) === -1) {
+        const msg = "The CORS policy for this site does not allow access from the specified Origin.";
+        return callback(new Error(msg), false);
+      }
+      return callback(null, true);
+    },
+    credentials: true,
+  })
+);
+
+// Rest of your code remains the same...
 
 const spotifyApi = new SpotifyWebApi({
   clientId: process.env.SPOTIFY_CLIENT_ID,
